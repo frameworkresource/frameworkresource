@@ -1,0 +1,54 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 381310495 Realtime: 1008539447
+
+** MEMINFO in pid 18051 [io.ionic.starter] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    11593    11552        0       26    12724    21972    19064     2907
+  Dalvik Heap    12161    12108        4      104    13256     9327     3183     6144
+ Dalvik Other     1257     1256        0       12     1572                           
+        Stack     1036     1036        0        0     1048                           
+       Ashmem      170      104        0        0      908                           
+      Gfx dev      660      660        0        0      660                           
+    Other dev      213      192       16        0      532                           
+     .so mmap     8186      220     4676        4    29588                           
+    .jar mmap     1920        0      404        0    22372                           
+    .apk mmap    18802      320    11288        0    31888                           
+    .ttf mmap      208        0      128        0      288                           
+    .dex mmap     3404        8     3336        0     3904                           
+    .oat mmap      745        0       16        0    15644                           
+    .art mmap     1739     1260       56      156    12820                           
+   Other mmap     1810        8     1348        0     2904                           
+   EGL mtrack    30828    30828        0        0    30828                           
+    GL mtrack      576      576        0        0      576                           
+      Unknown     5071     5040        4        1     5420                           
+        TOTAL   100682    65168    21276      303   186932    31299    22247     9051
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    13424                          26076
+         Native Heap:    11552                          12724
+                Code:    20412                         103704
+               Stack:     1036                           1048
+            Graphics:    32064                          32064
+       Private Other:     7956
+              System:    14238
+             Unknown:                                   11316
+ 
+           TOTAL PSS:   100682            TOTAL RSS:   186932       TOTAL SWAP PSS:      303
+ 
+ Objects
+               Views:       11         ViewRootImpl:        1
+         AppContexts:        7           Activities:        1
+              Assets:       24        AssetManagers:        0
+       Local Binders:       45        Proxy Binders:       48
+       Parcel memory:        8         Parcel count:       34
+    Death Recipients:        3      OpenSSL Sockets:        0
+            WebViews:        1
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 

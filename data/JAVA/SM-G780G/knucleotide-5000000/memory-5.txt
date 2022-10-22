@@ -1,0 +1,53 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 294031159 Realtime: 678697466
+
+** MEMINFO in pid 18606 [com.android.starter] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap     7656     7616        4       30     8692    19144    10990     8153
+  Dalvik Heap    32674    32480       80      102    33824     4986     2938     2048
+ Dalvik Other     2547     1892      428        0     3432                           
+        Stack      568      568        0        0      576                           
+       Ashmem       22        0        0        0      696                           
+      Gfx dev       40       40        0        0       40                           
+    Other dev       28        4       16        0      380                           
+     .so mmap     4692      192     2616        8    23492                           
+    .jar mmap    11192        0     6136        0    38020                           
+    .apk mmap      716        0      132        0     2308                           
+    .ttf mmap        6        0        0        0      136                           
+    .dex mmap    25431    25420        0        0    25876                           
+    .oat mmap      184        0       76        0     1792                           
+    .art mmap     8245     7064      824       84    17092                           
+   Other mmap       86        8       52        0      624                           
+    GL mtrack      384      384        0        0      384                           
+      Unknown      396      376        4        3      772                           
+        TOTAL    95094    76044    10368      227   158136    24130    13928    10201
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    40368                          50916
+         Native Heap:     7616                           8692
+                Code:    34576                          91792
+               Stack:      568                            576
+            Graphics:      424                            424
+       Private Other:     2860
+              System:     8682
+             Unknown:                                    5736
+ 
+           TOTAL PSS:    95094            TOTAL RSS:   158136       TOTAL SWAP PSS:      227
+ 
+ Objects
+               Views:       13         ViewRootImpl:        0
+         AppContexts:        6           Activities:        1
+              Assets:       20        AssetManagers:        0
+       Local Binders:        5        Proxy Binders:       39
+       Parcel memory:        4         Parcel count:       15
+    Death Recipients:        0      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 

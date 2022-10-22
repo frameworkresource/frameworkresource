@@ -1,0 +1,57 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 301423039 Realtime: 653781950
+
+** MEMINFO in pid 18508 [at.stefanhuber.contactappnative] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    15664    15592       24       50    16712    22908    21056     1851
+  Dalvik Heap     6380     4904       88       41    11600     9046     2902     6144
+ Dalvik Other      752      700        0       20     1420                           
+        Stack      504      504        0        0      516                           
+       Ashmem       55        0        0        0      704                           
+      Gfx dev     2368     2368        0        0     2368                           
+    Other dev       27        0       20        0      408                           
+     .so mmap     3832      204      604       18    30340                           
+    .jar mmap     2842        0      448        0    26700                           
+    .apk mmap      706        0       84        0     2832                           
+    .ttf mmap       21        0        0        0      284                           
+    .dex mmap     1756        8     1728        0     2196                           
+    .oat mmap     1920        0      320        0    19952                           
+    .art mmap     2621     1464      128      203    15352                           
+   Other mmap       55        8        0        0      740                           
+   EGL mtrack    30828    30828        0        0    30828                           
+    GL mtrack      384      384        0        0      384                           
+      Unknown      473      428        0        2      880                           
+        TOTAL    71522    57392     3444      334   164216    31954    23958     7995
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:     6496                          26952
+         Native Heap:    15592                          16712
+                Code:     3396                          82376
+               Stack:      504                            516
+            Graphics:    33580                          33580
+       Private Other:     1268
+              System:    10686
+             Unknown:                                    4080
+ 
+           TOTAL PSS:    71522            TOTAL RSS:   164216       TOTAL SWAP PSS:      334
+ 
+ Objects
+               Views:      136         ViewRootImpl:        2
+         AppContexts:        8           Activities:        2
+              Assets:       20        AssetManagers:        0
+       Local Binders:       33        Proxy Binders:       89
+       Parcel memory:        6         Parcel count:       24
+    Death Recipients:        0      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:       92
+  PAGECACHE_OVERFLOW:       30          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b)          cache  Dbname
+         4       28             31        11/34/2  /data/user/0/at.stefanhuber.contactappnative/databases/contact_database

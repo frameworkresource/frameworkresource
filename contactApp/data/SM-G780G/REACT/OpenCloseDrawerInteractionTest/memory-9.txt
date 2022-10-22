@@ -1,0 +1,57 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 287220364 Realtime: 639579275
+
+** MEMINFO in pid 3276 [com.contactappreactnative] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    17531    17464       20       51    18540    24244    20902     3341
+  Dalvik Heap    16886    16748        0      185    18144    18822     9411     9411
+ Dalvik Other     4506     2756      396        2     6576                           
+        Stack     1052     1052        0        0     1064                           
+       Ashmem       64        0        0        0      704                           
+      Gfx dev     2436     2436        0        0     2436                           
+    Other dev       29        0       20        0      424                           
+     .so mmap    28584     1332    23316       18    56088                           
+    .jar mmap     7992        0     1440        0    42504                           
+    .apk mmap      787        0      100        0     2800                           
+    .ttf mmap      477        0      324        0      944                           
+    .dex mmap     8581        0     8560        0     9016                           
+    .oat mmap      131        0        0        0     1896                           
+    .art mmap     8379     7184      644      134    17644                           
+   Other mmap       54        8        0        0      728                           
+   EGL mtrack    30828    30828        0        0    30828                           
+    GL mtrack      384      384        0        0      384                           
+      Unknown    59511    59456        4        3    59904                           
+        TOTAL   188605   139648    34824      393   270624    43066    30313    12752
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    24576                          35788
+         Native Heap:    17464                          18540
+                Code:    35072                         115652
+               Stack:     1052                           1064
+            Graphics:    33648                          33648
+       Private Other:    62660
+              System:    14133
+             Unknown:                                   65932
+ 
+           TOTAL PSS:   188605            TOTAL RSS:   270624       TOTAL SWAP PSS:      393
+ 
+ Objects
+               Views:     1129         ViewRootImpl:        1
+         AppContexts:        6           Activities:        1
+              Assets:       20        AssetManagers:        0
+       Local Binders:       15        Proxy Binders:       41
+       Parcel memory:        6         Parcel count:       26
+    Death Recipients:        0      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      147
+  PAGECACHE_OVERFLOW:       55          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b)          cache  Dbname
+         4       44             29        22/27/3  /data/user/0/com.contactappreactnative/databases/RKStorage
