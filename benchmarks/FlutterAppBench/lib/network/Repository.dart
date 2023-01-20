@@ -2,8 +2,7 @@ import 'package:http/http.dart' as http;
 import 'package:starter/model/Program.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
-const BASE_URL = "http://10.42.0.1:3000/";
-//const BASE_URL = "http://10.64.0.111:3000/";
+const BASE_URL = "http://192.168.1.68:3000/";
 const START_ENDPOINT = "what_now/";
 const LOGDATA_ENDPOINT = "logdata/";
 const FINISH_ENDPOINT = "done/";

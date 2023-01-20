@@ -7,5 +7,6 @@ export enum Program {
     pidigits,
     regex,
     revcomp,
-    spectral
+    spectral,
+    mandelbrot
 }

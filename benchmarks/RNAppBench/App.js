@@ -2,16 +2,15 @@ import React, {useState} from 'react';
 import binarytree from './benchmarks/binarytree';
 import fasta from './benchmarks/fasta';
 import fann from './benchmarks/fannkuch';
-  //import fastaOld from './benchmarks/fastaold';
 import nbody from './benchmarks/nbody';
 import pidigits from './benchmarks/pidigits';
 import spectral from './benchmarks/spectral';
+import mandelbrot from './benchmarks/mandelbrot';
+
 
 import startKnucleotide from './benchmarks/knucleotide';
 import startRegex from './benchmarks/regex';
-  //import regexold from './benchmarks/regexold';
 import startRevComp from './benchmarks/revcomp';
-  //import revcompold from './benchmarks/revcompold'; 
 
 import DeviceInfo from 'react-native-device-info';
 import {useKeepAwake} from '@sayem314/react-native-keep-awake';
@@ -24,15 +23,14 @@ import {
   View,
 } from 'react-native';
 
+
 let hasCalled = false;
 
 const APP_ID = "com.rnappbench";
 const FRAMEWORK = "REACT";
 const TEST_TYPE = "benchmarkGame";
 
-const localhostip = '192.168.1.4';
-
-var blankInput = 120000; //2 minutes
+const localhostip = '10.42.0.1';
 
 const App: () => Node = () => {
   useKeepAwake();
@@ -68,25 +66,6 @@ const App: () => Node = () => {
   };
 
   whatNow();
-
-  return (
-    <View style={styles.view}>
-      {isLoading ? (
-        <ActivityIndicator />
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.flatList}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <View style={styles.imageView}>
-              <p>{benchmark}</p>
-            </View>
-          )}
-        />
-      )}
-    </View>
-  );
-};
 
 const sendLogData = async () => {
   try {
@@ -138,6 +117,7 @@ const checkCorrectData = async isDone => {
 
 
 
+
 const setupData = async function (data) {
   const dataSplited = data.split('-');
   console.log(dataSplited);
@@ -149,14 +129,14 @@ const setupData = async function (data) {
     case 'binarytree':
       hasFinished = await binarytree(parameter);
       break;
+    case 'mandelbrot':
+      hasFinished = await mandelbrot(parameter);
+      break;
     case 'fannkuch':
       hasFinished = await fann(parameter);
       break;
     case 'fasta':
       hasFinished = await fasta(parameter);
-      break;
-    case 'fastaold':
-     // hasFinished = fastaOld(fastaInput);
       break;
     case 'knucleotide':
       hasFinished = await startKnucleotide(parameter);
@@ -170,31 +150,43 @@ const setupData = async function (data) {
     case 'regex':
       hasFinished = await startRegex(parameter);
       break;
-    case 'regexold':
-    //  hasFinished = regexold(regexInput);
-      break;
     case 'revcomp':
       hasFinished = await startRevComp(parameter);
-      break;
-    case 'revcompold':
-   //   hasFinished = revcompold(revcompInput);
       break;
     case 'spectral':
       hasFinished = await spectral(parameter);
       break;
     default:
       console.log('no input option');
-     // hasFinished = fastaOld(fastaInput);
   }
 
   if (hasFinished === 'finished') {
-    // finish();
     var end = new Date().getTime();
     var time = (end - start)/1000.0;
     console.log('Execution time: ' + time);
   }else{
     console.log("ERROR: did not finish right");
   }
+
+}
+
+return (
+  <View style={styles.view}>
+    {isLoading ? (
+      <ActivityIndicator />
+    ) : (
+      <FlatList
+        contentContainerStyle={styles.flatList}
+        keyExtractor={item => item.id}
+        renderItem={({item}) => (
+          <View style={styles.imageView}>
+            <p>{benchmark}</p>
+          </View>
+        )}
+      />
+    )}
+  </View>
+);
 
 };
 

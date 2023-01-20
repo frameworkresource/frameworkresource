@@ -12,6 +12,7 @@ import 'package:starter/programs/pidigits.dart';
 import 'package:starter/programs/regex.dart';
 import 'package:starter/programs/revComp.dart';
 import 'package:starter/programs/spectral.dart';
+import 'package:starter/programs/spectralParallel.dart';
 
 import 'package:flutter/services.dart' show ByteData, rootBundle;
 import 'model/Program.dart';
@@ -66,6 +67,9 @@ Future<void> runProgram(ProgramExecution program, IOSink writer) async {
       break;
     case Program.spectral:
       runSpectral(int.parse(program.parameter), writer);
+      break;
+    case Program.spectralParallel:
+      await runSpectralParallel(int.parse(program.parameter), writer);
       break;
   }
 }

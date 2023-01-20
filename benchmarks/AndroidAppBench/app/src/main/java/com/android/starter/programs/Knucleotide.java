@@ -1,192 +1,276 @@
 package com.android.starter.programs;
 
 /* The Computer Language Benchmarks Game
- https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
-
- contributed by James McIlree
- modified by Tagir Valeev
+ * https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
+ *
+ * contributed by Daryl Griffith
+ *
+ *
+ * https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-java-4.html
  */
 
-// 28/05/2022
-// https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-java-1.html
-
-import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap.SimpleEntry;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 public class Knucleotide {
 
-    public
+    static final Map<Key, Value> MAP = new HashMap<>();
+    static final int[] SEQUENCES1 = {2, 1};
+    static final int[] SEQUENCES2 = {18, 12, 6, 4, 3};
+    static final String[] SPICIFIC_SEQUENCES = new String[]{"GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"};
+    static final int LINE_LENGTH = 60;
+    static final int EOF = -1;
+    static byte[] nucleotides;
 
-    static final byte[] codes = { -1, 0, -1, 1, 3, -1, -1, 2 };
-    static final char[] nucleotides = { 'A', 'C', 'G', 'T' };
+    public void runCode(InputStream input, FileOutputStream writer) throws IOException {
+        {
+            byte[] temp = new byte[LINE_LENGTH];
+            byte[] buffer = new byte[125_000_000];
+            byte[] species = ">TH".getBytes();
+            int n;
+            int i;
 
-    static class Result {
-        Long2IntOpenHashMap map = new Long2IntOpenHashMap();
-        int keyLength;
+            try (LineInputStream in = new LineInputStream(input)) {
+                outer:
+                for (;;) {
+                    n = in.readLine(temp);
+                    if (n == EOF) {
+                        return;
+                    }
+                    if (n != LINE_LENGTH) {
+                        for (i = 0; i < species.length; i++) {
+                            if (temp[i] != species[i]) {
+                                continue outer;
+                            }
+                        }
+                        break;
+                    }
+                }
+                i = 0;
+                for (;;) {
+                    n = in.readLine(temp);
+                    if (n == EOF) {
+                        break;
+                    }
+                    for (int j = 0; j < n; i++, j++) {
+                        buffer[i] = translate(temp[j]);
+                    }
+                }
+                if (i == buffer.length) {
+                    nucleotides = buffer;
+                } else {
+                    nucleotides = new byte[i];
+                    System.arraycopy(buffer, 0, nucleotides, 0, i);
+                }
+            } catch (IOException e) {
 
-        public Result(int keyLength) {
-            this.keyLength = keyLength;
-        }
-    }
-
-    static ArrayList<Callable<Result>> createFragmentTasks(final byte[] sequence,
-                                                           int[] fragmentLengths) {
-        ArrayList<Callable<Result>> tasks = new ArrayList<>();
-        for (int fragmentLength : fragmentLengths) {
-            for (int index = 0; index < fragmentLength; index++) {
-                int offset = index;
-                tasks.add(() -> createFragmentMap(sequence, offset, fragmentLength));
             }
         }
-        return tasks;
+        countSequences(SEQUENCES1);
+        {
+            List<Entry<Key, Value>> sequence1 = new ArrayList<>();
+            List<Entry<Key, Value>> sequence2 = new ArrayList<>();
+
+            for (Entry<Key, Value> entry : MAP.entrySet()) {
+                switch (Long.numberOfLeadingZeros(entry.getKey().key)) {
+                    case 61:
+                        sequence1.add(entry);
+                        break;
+                    case 59:
+                        sequence2.add(entry);
+                }
+            }
+            printSequence(writer, sequence1);
+            printSequence(writer,sequence2);
+        }
+        countSequences(SEQUENCES2);
+        {
+            Key key = new Key();
+
+            for (String sequence : SPICIFIC_SEQUENCES) {
+                key.setHash(sequence);
+                String s = MAP.get(key).count + '\t' + sequence + System.lineSeparator();
+                writer.write(s.getBytes());
+            }
+        }
     }
 
-    static Result createFragmentMap(byte[] sequence, int offset, int fragmentLength) {
-        Result res = new Result(fragmentLength);
-        Long2IntOpenHashMap map = res.map;
-        int lastIndex = sequence.length - fragmentLength + 1;
-        for (int index = offset; index < lastIndex; index += fragmentLength) {
-            map.addTo(getKey(sequence, index, fragmentLength), 1);
-        }
-
-        return res;
+    static byte translate(byte b) {
+        return (byte) ((b >> 1) & 3);
     }
 
-    static Result sumTwoMaps(Result map1, Result map2) {
-        for (Long aLong : map2.map.keySet()) {
-            map1.map.addTo(aLong, map2.map.get(aLong));
+    static void countSequences(int[] sequences) {
+        for (int sequence : sequences) {
+            updateHashtable(sequence);
         }
-        return map1;
     }
 
-    static String writeFrequencies(float totalCount, Result frequencies) {
-        ArrayList<Entry<String, Integer>> freq = new ArrayList<>(frequencies.map.size());
-        for (Long aLong : frequencies.map.keySet()) {
-            freq.add(new SimpleEntry<>(keyToString(aLong,
-                    frequencies.keyLength), frequencies.map.get(aLong)));
+    static void updateHashtable(int sequence) {
+        int sequenceTop = nucleotides.length - sequence + 1;
+        Key key = new Key();
+        Value value;
+
+        for (int i = 0; i < sequenceTop; i++) {
+            key.setHash(i, sequence);
+            value = MAP.get(key);
+            if (value == null) {
+                value = new Value();
+                value.count = 1;
+                MAP.put(key, value);
+                key = new Key();
+            } else {
+                value.count++;
+            }
         }
-        Collections.sort(freq, (o1, o2) -> -(o1.getValue().compareTo(o2.getValue())));
-        StringBuilder sb = new StringBuilder();
-        for (Entry<String, Integer> entry : freq) {
-            sb.append(String.format(Locale.ENGLISH, "%s %.3f\n", entry.getKey(),
-                    entry.getValue() * 100.0f / totalCount));
-        }
-        return sb.append('\n').toString();
     }
 
-    static String writeCount(List<Future<Result>> futures, String nucleotideFragment)
-            throws Exception {
-        byte[] key = toCodes(nucleotideFragment.getBytes(StandardCharsets.ISO_8859_1),
-                nucleotideFragment.length());
-        long k = getKey(key, 0, nucleotideFragment.length());
-        int count = 0;
-        for (Future<Result> future : futures) {
-            Result f = future.get();
-            if (f.keyLength == nucleotideFragment.length()) {
-                count += f.map.get(k);
+    static void printSequence(FileOutputStream stream, List<Entry<Key, Value>> sequence) throws IOException {
+        int sum = 0;
+
+        Collections.sort(sequence, new Comparator<Entry<Key, Value>>() {
+
+            @Override
+            public int compare(Entry<Key, Value> entry1, Entry<Key, Value> entry2) {
+                if (entry2.getValue().count != entry1.getValue().count) {
+                    return entry2.getValue().count - entry1.getValue().count;
+                }
+                return entry1.getKey().toString().compareTo(entry2.getKey().toString());
+            }
+        });
+        for (Entry<Key, Value> entry : sequence) {
+            sum += entry.getValue().count;
+        }
+        for (Entry<Key, Value> entry : sequence) {
+            stream.write(String.format("%s %.3f\n", entry.getKey(), entry.getValue().count * 100f / sum).getBytes());
+        }
+        stream.write(System.lineSeparator().getBytes());
+    }
+
+    static class LineInputStream implements Closeable {
+
+        private static final int LF = 10;
+        private final ByteBuffer buffer = ByteBuffer.allocate(8192);
+        private final InputStream in;
+
+        public LineInputStream(InputStream in) {
+            this.in = in;
+            buffer.limit(buffer.position());
+        }
+
+        public int readLine(byte[] b) throws IOException {
+            for (int end = buffer.position(); end < buffer.limit(); end++) {
+                if (buffer.get(end) == LF) {
+                    if (end - buffer.position() == LINE_LENGTH) {
+                        buffer.get(b);
+                        buffer.position(buffer.position() + 1);
+                        return LINE_LENGTH;
+                    } else {
+                        int size = end - buffer.position();
+
+                        buffer.get(b, 0, size);
+                        buffer.position(buffer.position() + 1);
+                        return size;
+                    }
+                }
+            }
+            buffer.compact();
+            int n = in.read(buffer.array(), buffer.position(), buffer.remaining());
+
+            if (n == EOF) {
+                buffer.flip();
+                if (buffer.hasRemaining()) {
+                    int size = buffer.remaining();
+
+                    buffer.get(b, 0, size);
+                    return size;
+                } else {
+                    return EOF;
+                }
+            } else {
+                buffer.position(buffer.position() + n);
+                buffer.flip();
+            }
+            for (int end = buffer.position(); end < buffer.limit(); end++) {
+                if (buffer.get(end) == LF) {
+                    if (end - buffer.position() == LINE_LENGTH) {
+                        buffer.get(b);
+                        buffer.position(buffer.position() + 1);
+                        return LINE_LENGTH;
+                    } else {
+                        int size = end - buffer.position();
+
+                        buffer.get(b, 0, size);
+                        buffer.position(buffer.position() + 1);
+                        return size;
+                    }
+                }
+            }
+            return EOF;
+        }
+
+        @Override
+        public void close() throws IOException {
+            in.close();
+        }
+    }
+
+    static class Key {
+
+        long key;
+
+        void setHash(int offset, int length) {
+            key = 1;
+            for (int i = offset + length - 1; i >= offset; i--) {
+                key = (key << 2) | nucleotides[i];
             }
         }
 
-        return count + "\t" + nucleotideFragment + '\n';
-    }
-
-    /**
-     * Convert long key to the nucleotides string
-     */
-    static String keyToString(long key, int length) {
-        char[] res = new char[length];
-        for (int i = 0; i < length; i++) {
-            res[length - i - 1] = nucleotides[(int) (key & 0x3)];
-            key >>= 2;
-        }
-        return new String(res);
-    }
-
-    /**
-     * Get the long key for given byte array of codes at given offset and length
-     * (length must be less than 32)
-     */
-    static long getKey(byte[] arr, int offset, int length) {
-        long key = 0;
-        for (int i = offset; i < offset + length; i++) {
-            key = key * 4 + arr[i];
-        }
-        return key;
-    }
-
-    /**
-     * Convert given byte array (limiting to given length) containing acgtACGT
-     * to codes (0 = A, 1 = C, 2 = G, 3 = T) and returns new array
-     */
-    static byte[] toCodes(byte[] sequence, int length) {
-        byte[] result = new byte[length];
-        for (int i = 0; i < length; i++) {
-            result[i] = codes[sequence[i] & 0x7];
-        }
-        return result;
-    }
-
-    static byte[] read(InputStream is) throws IOException {
-        String line;
-        BufferedReader in = new BufferedReader(new InputStreamReader(is,
-                StandardCharsets.ISO_8859_1));
-        while ((line = in.readLine()) != null) {
-            if (line.startsWith(">THREE"))
-                break;
-        }
-
-        byte[] bytes = new byte[1048576];
-        int position = 0;
-        while ((line = in.readLine()) != null && line.charAt(0) != '>') {
-            if (line.length() + position > bytes.length) {
-                byte[] newBytes = new byte[bytes.length * 2];
-                System.arraycopy(bytes, 0, newBytes, 0, position);
-                bytes = newBytes;
+        void setHash(String species) {
+            key = 1;
+            for (int i = species.length() - 1; i >= 0; i--) {
+                key = (key << 2) | translate((byte) species.charAt(i));
             }
-            for (int i = 0; i < line.length(); i++)
-                bytes[position++] = (byte) line.charAt(i);
         }
 
-        return toCodes(bytes, position);
+        @Override
+        public int hashCode() {
+            return (int) key;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            final Key other = (Key) obj;
+
+            return key == other.key;
+        }
+
+        @Override
+        public String toString() {
+            char[] name = new char[(63 - Long.numberOfLeadingZeros(key)) / 2];
+            long temp = key;
+
+            for (int i = 0; temp > 1; temp >>= 2, i++) {
+                name[i] = (char) (((temp & 3) << 1) | 'A');
+                if (name[i] == 'E') {
+                    name[i] = 'T';
+                }
+            }
+            return new String(name);
+        }
     }
 
-    public void runCode(InputStream input, FileOutputStream writer) throws Exception {
-        byte[] sequence = read(input);
+    static class Value {
 
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime()
-                .availableProcessors());
-        int[] fragmentLengths = { 1, 2, 3, 4, 6, 12, 18 };
-        List<Future<Result>> futures = pool.invokeAll(createFragmentTasks(sequence,
-                fragmentLengths));
-        pool.shutdown();
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(writeFrequencies(sequence.length, futures.get(0).get()));
-        sb.append(writeFrequencies(sequence.length - 1,
-                sumTwoMaps(futures.get(1).get(), futures.get(2).get())));
-
-        String[] nucleotideFragments = { "GGT", "GGTA", "GGTATT", "GGTATTTTAATT",
-                "GGTATTTTAATTTATAGT" };
-        for (String nucleotideFragment : nucleotideFragments) {
-            sb.append(writeCount(futures, nucleotideFragment));
-        }
-        writer.write(sb.toString().getBytes());
+        int count;
     }
 }

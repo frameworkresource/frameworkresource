@@ -10,7 +10,8 @@ enum Program {
   pidigits,
   regex,
   revcomp,
-  spectral
+  spectral,
+  spectralParallel
 }
 
 class ProgramExecution {
@@ -32,6 +33,7 @@ ProgramExecution programMapper(String text){
     "regex": Program.regex,
     "revcomp": Program.revcomp,
     "spectral": Program.spectral,
+    "spectralParallel": Program.spectralParallel,
     "pidigits": Program.pidigits
   };
   if(map.containsKey(splited[0])){

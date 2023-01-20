@@ -4,303 +4,160 @@ package com.android.starter.programs;
  * The Computer Language Benchmarks Game
  * https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
- * contributed by Han Kai
+ * contributed by Tao Lei
+ *
+ *
+ * https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/revcomp-java-5.html
  */
 
-// 28/05/2022
-// https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/revcomp-java-8.html
-
-import java.io.Closeable;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class RevComp {
 
-    public void runCode(InputStream inputStream, FileOutputStream writer) throws Exception {
-        try (Strand strand = new Strand();
-             InputStream standIn = inputStream;
-             FileOutputStream standOut = writer) {
-
-            while (strand.readOneStrand(standIn) >= 0) {
-                strand.reverse();
-                strand.write(standOut);
-                strand.reset();
-            }
-
-        }
-    }
-}
-
-class Chunk {
-    public static final int CHUNK_SIZE = 64 * 1024;
-
-    public int capacity = 0;
-    public int length = 0;
-
-    public final byte[] bytes = new byte[CHUNK_SIZE];
-
-    public void clear() {
-        capacity = 0;
-        length = 0;
-    }
-}
-
-class Strand implements Closeable {
-
-    private static final byte NEW_LINE = '\n';
-    private static final byte ANGLE = '>';
-    private static final int LINE_LENGTH = 61;
-
-    private static final byte[] map = new byte[128];
+    static final String transFrom    = "ACGTUMRWSYKVHDBN";
+    static final String transTo    = "TGCAAKYWSRMBDHVN";
+    static final byte[] transMap = new byte[128];
     static {
-        for (int i = 0; i < map.length; i++) {
-            map[i] = (byte) i;
-        }
-
-        map['t'] = map['T'] = 'A';
-        map['a'] = map['A'] = 'T';
-        map['g'] = map['G'] = 'C';
-        map['c'] = map['C'] = 'G';
-        map['v'] = map['V'] = 'B';
-        map['h'] = map['H'] = 'D';
-        map['r'] = map['R'] = 'Y';
-        map['m'] = map['M'] = 'K';
-        map['y'] = map['Y'] = 'R';
-        map['k'] = map['K'] = 'M';
-        map['b'] = map['B'] = 'V';
-        map['d'] = map['D'] = 'H';
-        map['u'] = map['U'] = 'A';
-    }
-
-    private static int NCPU = Runtime.getRuntime().availableProcessors();
-    private ExecutorService executor = Executors.newFixedThreadPool(NCPU);
-
-    private int chunkCount = 0;
-
-    private final ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-
-    private void ensureSize() {
-        if (chunkCount == chunks.size()) {
-            chunks.add(new Chunk());
+        for(int i=0;i<transMap.length;i++) transMap[i] = (byte)i;
+        for(int i=0;i<transFrom.length();i++)
+        {
+            char c = transFrom.charAt(i);
+            transMap[c] = transMap[Character.toLowerCase(c)] = (byte)transTo.charAt(i);
         }
     }
-
-    private boolean isLastChunk(Chunk chunk) {
-        return chunk.length != chunk.capacity;
-    }
-
-    private void correctLentgh(Chunk chunk, boolean skipFirst) {
-        final byte[] bytes = chunk.bytes;
-
-        final int start = skipFirst ? 1 : 0;
-        final int end = chunk.capacity;
-
-        for (int i = start; i < end; i++) {
-            if (ANGLE == bytes[i]) {
-                chunk.length = i;
-                return;
-            }
+    static byte[] buffer = new byte[65536];
+    static InputStream in = System.in;
+    static int pos,limit;
+    static int start,end;
+    static int endPos()
+    {
+        for(int off=pos;off<limit;off++)
+        {
+            if(buffer[off] == '\n')
+                return off;
         }
-
-        chunk.length = chunk.capacity;
-    }
-
-    private void prepareNextStrand() {
-        if (chunkCount == 0) {
-            return;
-        }
-
-        Chunk first = chunks.get(0);
-        Chunk last = chunks.get(chunkCount - 1);
-
-        if (last.capacity == last.length) {
-            for (int i = 0; i < chunkCount; i++) {
-                chunks.get(i).clear();
-            }
-
-            return;
-        }
-
-        System.arraycopy(last.bytes, last.length, first.bytes, 0, last.capacity - last.length);
-
-        first.capacity = last.capacity - last.length;
-        correctLentgh(first, true);
-
-        for (int i = 1; i < chunkCount; i++) {
-            chunks.get(i).clear();
-        }
-    }
-
-    public int readOneStrand(InputStream is) throws IOException {
-        while (true) {
-            ensureSize();
-
-            Chunk chunk = chunks.get(chunkCount);
-            chunkCount++;
-
-            if (isLastChunk(chunk)) {
-                return chunkCount;
-            }
-
-            byte[] bytes = chunk.bytes;
-
-            int readLength = is.read(bytes, chunk.length, Chunk.CHUNK_SIZE - chunk.length);
-
-            if (chunkCount == 1 && readLength < 0 && chunk.length == 0) {
-                return -1;
-            }
-
-            if (readLength > 0) {
-                chunk.capacity += readLength;
-                correctLentgh(chunk, chunkCount == 1);
-            }
-
-            if (readLength < 0 || isLastChunk(chunk)) {
-                return chunkCount;
-            }
-        }
-    }
-
-    public void reset() {
-        prepareNextStrand();
-        chunkCount = 0;
-    }
-
-    public void write(OutputStream out) throws IOException {
-        for (int i = 0; i < chunkCount; i++) {
-            Chunk chunk = chunks.get(i);
-            out.write(chunk.bytes, 0, chunk.length);
-        }
-    }
-
-    public void reverse() throws InterruptedException {
-        final int sumLength = getSumLength();
-        final int titleLength = getTitleLength();
-        final int dataLength = sumLength - titleLength;
-        final int realDataLength = dataLength - ceilDiv(dataLength, LINE_LENGTH);
-
-        final int leftEndIndex = realDataLength / 2;
-        final int rawLeftEndIndex = leftEndIndex + leftEndIndex / (LINE_LENGTH - 1);
-        final int leftEndChunkIndex = ceilDiv(rawLeftEndIndex + titleLength, Chunk.CHUNK_SIZE) - 1;
-        final int realLeftEndIndex = (rawLeftEndIndex + titleLength) % Chunk.CHUNK_SIZE - 1;
-
-        final List<Callable<Void>> tasks = new ArrayList<Callable<Void>>(NCPU);
-
-        final int itemCount = ceilDiv(leftEndChunkIndex + 1, NCPU);
-
-        for (int t = 0; t < NCPU; t++) {
-            final int start = itemCount * t;
-            final int end = Math.min(start + itemCount, leftEndChunkIndex + 1);
-
-            Callable<Void> task = () -> {
-                for (int i = start; i < end; i++) {
-                    int rawLeftIndex = i == 0 ? 0 : i * Chunk.CHUNK_SIZE - titleLength;
-
-                    int leftIndex = rawLeftIndex - rawLeftIndex / LINE_LENGTH;
-                    int rightIndex = realDataLength - leftIndex - 1;
-
-                    int rawRightIndex = rightIndex + rightIndex / (LINE_LENGTH - 1);
-
-                    int leftChunkIndex = i;
-                    int rightChunkIndex = ceilDiv(rawRightIndex + titleLength, Chunk.CHUNK_SIZE) - 1;
-
-                    int realLeftIndex = (rawLeftIndex + titleLength) % Chunk.CHUNK_SIZE;
-                    int realRightIndex = (rawRightIndex + titleLength) % Chunk.CHUNK_SIZE;
-
-                    int endIndex = leftEndChunkIndex == leftChunkIndex ? realLeftEndIndex
-                            : chunks.get(leftChunkIndex).length - 1;
-
-                    reverse(leftChunkIndex, rightChunkIndex, realLeftIndex, realRightIndex, endIndex);
-                }
-
-                return null;
-            };
-
-            tasks.add(task);
-        }
-
-        executor.invokeAll(tasks);
-    }
-
-    private void reverse(int leftChunkIndex, int rightChunkIndex, int leftIndex, int rightIndex, int leftEndIndex) {
-
-        final byte[] map = Strand.map;
-
-        Chunk leftChunk = chunks.get(leftChunkIndex);
-        Chunk rightChunk = chunks.get(rightChunkIndex);
-
-        byte[] leftBytes = leftChunk.bytes;
-        byte[] rightBytes = rightChunk.bytes;
-
-        while (leftIndex <= leftEndIndex) {
-            if (rightIndex < 0) {
-                rightChunk = chunks.get(--rightChunkIndex);
-                rightBytes = rightChunk.bytes;
-                rightIndex = rightChunk.length - 1;
-            }
-
-            if (leftBytes[leftIndex] == NEW_LINE) {
-                leftIndex++;
-            }
-
-            if (rightBytes[rightIndex] == NEW_LINE) {
-                rightIndex--;
-
-                if (rightIndex < 0) {
-                    rightChunk = chunks.get(--rightChunkIndex);
-                    rightBytes = rightChunk.bytes;
-                    rightIndex = rightChunk.length - 1;
-                }
-            }
-
-            if (leftIndex <= leftEndIndex) {
-                byte lByte = leftBytes[leftIndex];
-                byte rByte = rightBytes[rightIndex];
-
-                leftBytes[leftIndex++] = map[rByte];
-                rightBytes[rightIndex--] = map[lByte];
-            }
-        }
-
-    }
-
-    private int ceilDiv(int a, int b) {
-        return (a + b - 1) / b;
-    }
-
-    private int getSumLength() {
-        int sumLength = 0;
-
-        for (int i = 0; i < chunkCount; i++) {
-            sumLength += chunks.get(i).length;
-        }
-
-        return sumLength;
-    }
-
-    private int getTitleLength() {
-        Chunk first = chunks.get(0);
-        byte[] bytes = first.bytes;
-
-        for (int i = 0; i < first.length; i++) {
-            if (bytes[i] == NEW_LINE) {
-                return (i + 1);
-            }
-        }
-
         return -1;
     }
-
-    @Override
-    public void close() throws IOException {
-        executor.shutdown();
+    static boolean nextLine() throws Exception
+    {
+        for(;;)
+        {
+            end = endPos();
+            if(end >= 0)
+            {
+                start = pos;
+                pos = end+1;
+                if(buffer[end-1]== '\r')
+                    end --;
+                while(buffer[start]==' ') start++;
+                while(end>start && buffer[end-1] == ' ') end--;
+                if(end > start)
+                    return true;
+            }
+            else
+            {
+                if(pos > 0 && limit > pos)
+                {
+                    limit-=pos;
+                    System.arraycopy(buffer,pos,buffer,0,limit);
+                    pos = 0;
+                }
+                else
+                {
+                    pos=limit=0;
+                }
+                int r = in.read(buffer, limit, buffer.length-limit);
+                if(r<0)
+                    return false;
+                limit += r;
+            }
+        }
+    }
+    static int LINE_WIDTH =0;
+    static byte[] data = new byte[1<<20];
+    static int size;
+    static byte[] outputBuffer = new byte[65536];
+    static int outputPos = 0;
+    static void flushData(FileOutputStream writer) throws Exception
+    {
+        writer.write(outputBuffer,0,outputPos);
+        outputPos = 0;
+    }
+    static void prepareWrite(int len, FileOutputStream writer) throws Exception
+    {
+        if(outputPos + len > outputBuffer.length)
+            flushData(writer);
+    }
+    static void write(int b) throws Exception
+    {
+        outputBuffer[outputPos++] = (byte)b;
+    }
+    static void write(byte[] b,int off,int len,FileOutputStream writer) throws Exception
+    {
+        prepareWrite(len,writer);
+        System.arraycopy(b,off,outputBuffer,outputPos,len);
+        outputPos += len;
+    }
+    static void finishData(FileOutputStream writer) throws Exception
+    {
+        while(size > 0)
+        {
+            int len = Math.min(LINE_WIDTH,size);
+            prepareWrite(len + 1,writer);
+            while(len-- != 0)
+            {
+                write(data[--size]);
+            }
+            write('\n');
+        }
+        resetData();
+    }
+    static void resetData()
+    {
+        LINE_WIDTH = 0;
+        size = 0;
+    }
+    static void appendLine() throws Exception
+    {
+        int len = end-start;
+        if(LINE_WIDTH==0) LINE_WIDTH = len;
+        if(size + len > data.length)
+        {
+            byte[] data0 = data;
+            data = new byte[data.length*2];
+            System.arraycopy(data0,0,data,0,size);
+        }
+        for(int i=start;i<end;i++)
+        {
+            data[size++] = transMap[buffer[i]];
+        }
+    }
+    static void solve(InputStream ins, FileOutputStream writer) throws Exception
+    {
+        in = ins;
+        pos = limit = 0;
+        outputPos = 0;
+        resetData();
+        while(nextLine())
+        {
+            if(buffer[start] == '>')
+            {
+                finishData(writer);
+                write(buffer,start,pos-start,writer);
+            }
+            else
+            {
+                appendLine();
+            }
+        }
+        finishData(writer);
+        if(outputPos > 0) flushData(writer);
+        System.out.flush();
+    }
+    public void runCode(InputStream inputStream, FileOutputStream writer) throws Exception
+    {
+        solve(inputStream,writer);
     }
 
 }

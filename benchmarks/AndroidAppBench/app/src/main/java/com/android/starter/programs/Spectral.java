@@ -26,9 +26,9 @@ public class Spectral {
     private static final DecimalFormat formatter = new DecimalFormat("#.000000000");
     private static int NCPU = 1; //Runtime.getRuntime().availableProcessors();
 
-    public void runCode(final int n, FileOutputStream writer, int nThreads) throws InterruptedException, IOException {
+    public void runCode(int nThreads, FileOutputStream writer) throws InterruptedException, IOException {
         NCPU = nThreads;
-
+        final int n = 19500;
         final double[] u = new double[n];
         for (int i = 0; i < n; i++)
             u[i] = 1.0;

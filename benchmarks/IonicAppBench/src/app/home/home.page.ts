@@ -3,6 +3,7 @@ import { Component , OnInit } from '@angular/core';
 import { StorageService } from '../services/local/storage.service';
 import { HttpService } from '../services/remote/http.service';
 
+import mandelbrot from '../benchmarks/mandelbrot';
 import binarytree from '../benchmarks/binarytree';
 import fasta from '../benchmarks/fasta';
 import nbody from '../benchmarks/nbody';
@@ -31,10 +32,7 @@ export class HomePage implements OnInit{
     const response = await this.http.what_now();
     const programList = response.split("-");
     const program = this.mapProgram(programList[0])
-    const before = performance.now()
     await this.runProgram(program, parseInt(programList[1]), this.storage.writeText);
-    const after = performance.now()
-    console.log(`CÓDIGO DUROU: ${(after - before) /1000} SEGUNDOS`);
     
     await this.http.log_data();
     await this.storage.deleteFile();
@@ -58,6 +56,9 @@ export class HomePage implements OnInit{
         break;
       case Program.pidigits:
         await pidigits(parameter, writer);
+        break;
+      case Program.mandelbrot:
+        await mandelbrot(parameter, writer);
         break;
       case Program.spectral:
         await spectral(parameter, writer);
@@ -97,6 +98,8 @@ export class HomePage implements OnInit{
         return Program.spectral;
       case "pidigits":
         return Program.pidigits;
+      case "mandelbrot":
+        return Program.mandelbrot;
       default:
         return;
     }
